@@ -4,7 +4,7 @@ const crypto = require("crypto");
 function RabbitMQRPC(connectionString) {
   console.log("[x] RabbitMQRPC initialized");
   this.connectionString =
-    connectionString ?? "amqp://test:password@192.168.1.42:5672";
+    connectionString ?? "amqp://test:password@192.168.1.42:5672"; // amqp://localhost:5672
   this.connection = null;
 }
 
@@ -21,7 +21,7 @@ RabbitMQRPC.prototype.observer = async function (queue, operation) {
   console.log("[x] Observer started for Queue:" + queue);
   const channel = await this.createChannel();
   await channel.assertQueue(queue, { durable: false });
-  channel.prefetch(1000);
+  channel.prefetch(1);
   channel.consume(
     queue,
     async (message) => {
