@@ -9,6 +9,7 @@ const RunRabbitMQRPC = async () => {
   RabbitMQRPC.observer(queue.CUSTOMER_RPC, async (payload) => {
     // DB Operations or stuff
     console.log(payload);
+    // { id: 1 }
     return new Promise((resolve, reject) => setTimeout(resolve({ message: "test response" }), 3000)); // Wait 3000ms before send response
   });
 
