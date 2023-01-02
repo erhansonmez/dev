@@ -1,5 +1,6 @@
 const amqplib = require("amqplib");
 const crypto = require("crypto");
+const { resourceLimits } = require("worker_threads");
 
 function RabbitMq(connectionString) {
   console.log("[x] RabbitMq initialized");
@@ -21,8 +22,8 @@ RabbitMq.prototype.createConsumer = async function (queue, operation, queueOpts)
   console.log("[x] createConsumer started for Queue:" + queue);
   const channel = await this.createChannel();
   await channel.assertQueue(queue, queueOpts);
-  channel.prefetch(1);
-  channel.consume(queue, operation, {
+  await channel.prefetch(50);
+  await channel.consume(queue, operation, {
     noAck: true,
   });
 };
@@ -31,8 +32,8 @@ RabbitMq.prototype.observer = async function (queue, operation) {
   console.log("[x] Observer started for Queue:" + queue);
   const channel = await this.createChannel();
   await channel.assertQueue(queue, { durable: false });
-  channel.prefetch(1);
-  channel.consume(
+  await channel.prefetch(50);
+  await channel.consume(
     queue,
     async (message) => {
       console.log("[x] Observer::Consume queue:" + queue);
@@ -97,7 +98,9 @@ RabbitMq.prototype.requestRpcData = async function (queue, payload, id) {
 RabbitMq.prototype.requestData = async function (queue, payload, queueOpts, senderOpts) {
   const channel = await this.createChannel();
   await channel.assertQueue(queue, queueOpts);
-  return channel.sendToQueue(queue, this.buffer(JSON.stringify(payload)), senderOpts);
+  const result = channel.sendToQueue(queue, this.buffer(JSON.stringify(payload)), senderOpts);
+  await channel.close();
+  return result;
 };
 
 RabbitMq.prototype.requestRpc = async function (queue, payload) {
